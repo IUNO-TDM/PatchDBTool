@@ -21,7 +21,7 @@ are:
 - The patchnumber MUST be placed between an initial and a final V (this is the delimiter for the script file)
 - The patchnumber should be increased by 1 for the next patch.
 - A Change-Log needs to be created for each database
-    - MarketplaceCore [Change-Log](https://github.com/IUNO-TDM)
+    - MarketplaceCore [Change-Log](https://github.com/IUNO-TDM/MarketplaceCore/tree/master/Database-patches)
     - OAuthDB [Change-Log](https://github.com/IUNO-TDM)
 - The initial patch file is a special case and has a different naming convention.
 
