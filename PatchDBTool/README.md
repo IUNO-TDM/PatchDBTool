@@ -11,19 +11,6 @@ are:
 - PatchDB
 - Restore
 
-that are organised in the following folder structure:
-
-.PatchDBTool
-    +/ BackupTool
-    ++ / Backups
-    ++ / BackupDatabase.sh
-    + PatchDB
-    ++ / ToBePatched
-    ++ / Archive
-    ++ / PatchDB.sh
-    + / RestoreDB
-    ++ / RestoreDB.sh
-
 **Some important informations**
 - Running the BackupTool will create a backup for the given database and store it on the folder **/BackupTool/Backups**
 - Running the PatchDB will runs the patches located on the **/PatchDBTool/PatchDB/ToBePatched**. Once the patch file was successful installed, the file is going to be moved to **/PatchDBTool/PatchDB/Archive**. In error case the file won't be moved.
