@@ -39,31 +39,31 @@ are:
 
 **Running the PatchDBTool**
 1. STEP - RUN Backup Script (BackupDatabase.sh)
-=> Open Bash Terminal
-=> copy containerid for the db container (e.g. 33d2881d4537)
-=> run command "chmod +x <pathToBackupScript> (e.g. /BackupTool/BackupDatabase.sh)"
-=> run command "<pathToBackupScript> (e.g. ./BackupTool/BackupDatabase.sh)"
-=> enter docker containerid and press ENTER
-=> enter Databasename and press ENTER
+- Open Bash Terminal
+- copy containerid for the db container (e.g. 33d2881d4537)
+- run command "chmod +x <pathToBackupScript> (e.g. /BackupTool/BackupDatabase.sh)"
+- run command "<pathToBackupScript> (e.g. ./BackupTool/BackupDatabase.sh)"
+- enter docker containerid and press ENTER
+- enter Databasename and press ENTER
 * * * * * * * * *
 2. STEP - Check Database Backup
-=> Check if the backup exists and file size is plausible
+- Check if the backup exists and file size is plausible
 * * * * * * * * *
 3. STEP - Copy the patch files
-=> Copy the patch files from local system to: ../PatchDBTool/PathDB/ToBePatched folder
+- Copy the patch files from local system to: ../PatchDBTool/PathDB/ToBePatched folder
 * * * * * * * * *
 4. STEP - RUN Patch Script (PatchDB.sh)
-=> Open Bash Terminal
-=> run command "chmod +x <pathToPatchDBTool> (e.g. /PatchDB/PatchDB.sh)"
-=> run command ./PatchDB.sh
-=> Proof if all Patches were installed and moved to the /PatchDB/Archive folder
+- Open Bash Terminal
+- run command "chmod +x <pathToPatchDBTool> (e.g. /PatchDB/PatchDB.sh)"
+- run command ./PatchDB.sh
+- Proof if all Patches were installed and moved to the /PatchDB/Archive folder
 * * * * * * * * *
 **RECOVER the Database - If any problem occurs, you may restore the old database**
 1. STEP - RUN the RESTORE Script (RestoreDB.sh)
-=> Open Bash Terminal
-=> run command "docker ps -a"
-=> copy containerid for the db container (e.g. tdmdocker_core-db)
-=> run command "chmod +x /RestoreDB/RestoreDB.sh"
-=> set containerid as parameter as well as the databasename and the Backup path and press ENTER
-=> Proof if the database was restored correctly
+- Open Bash Terminal
+- run command "docker ps -a"
+- copy containerid for the db container (e.g. tdmdocker_core-db)
+- run command "chmod +x /RestoreDB/RestoreDB.sh"
+- set containerid as parameter as well as the databasename and the Backup path and press ENTER
+- Proof if the database was restored correctly
 
