@@ -1,14 +1,7 @@
 #!/bin/bash
 
-#CONSTANTS
-databaseName='MarketplaceCore'
-userName='docker'
-hostName='localhost'
-port=5433
-
-#PATHS
-toBePatched=/home/ubuntu/PatchDBTool/PatchDB/ToBePatched/
-archiveFolder=/home/ubuntu/PatchDBTool/PatchDB/Archive/
+#Get Config file
+. ./PatchDB.config
 
 #MESSAGES 
 backupOk='Great!'
@@ -18,45 +11,50 @@ backupDone='Did you created a BACKUP?'
 checkDep='Checking patch number and dependencies for'
 runPatches='All patches are going to be installed. Wait till the processed is stopped!'
 
-#SQL Statements
-initialPatch=/home/ubuntu/PatchDBTool/PatchDB/ToBePatched/iuno_marketplacecore_VinitialV_20170914.sql
+#SQL Statements 
 checkPatchTable="SELECT 1 FROM   information_schema.tables WHERE  table_schema = 'public' AND table_name = 'patches';"
 checkCurrPatchNumber="SELECT max(patchnumber) as patchnumber from patches where patchnumber<="
-updatePatchTable="INSERT INTO patches (patchid,patchname,patchnumber,createdat) VALUES"
+updatePatchTable="INSERT INTO patches (patchname,patchnumber,executedat) VALUES "
 
 #FUNCTIONS
-function getPatchVersion() {
-	
-	 #Check if Patch Table exists. If don't Patch initial needs to be used
-	 patchTable=$(psql --host "$hostName" --port "$port" -U "$userName" -d "$databaseName" -t -c "$checkPatchTable")
-	 echo $patchTable ' ' $patchNumber
-	
+function getPatchVersion() { 
+	 echo "Check Patch Version"
+	 #Check if Patch Table exists. If don't Patch initial needs to be used	 	 
+	 patchTable=$(PGPASSWORD=$password psql --host "$hostName" --port "$port" -U "$userName" -d "$databaseName" -t -c "$checkPatchTable")
+	 if [ $? != 0 ]; then
+		exit
+	 fi
+
 	#Does the patch table exists? AND is the patchNumber <> initial?
 	if [[ $patchTable = 1 && $patchNumber = 'initial' ]]; then
 		echo 'Patch table already exists'
 		exit
 	fi
 
-	#Does the patch table exists? IF not just created - require initial patch
+	#Does the patch table exists? IF not just created - require initial patch	
 	if [[ $patchTable != 0  && $patchNumber = "initial" ]]; then
 		echo 'Run initial patch'
-		psql --host "$hostName" --port "$port" -U "$userName" -d "$databaseName" -f "$toBePatched""$filename"
+		PGPASSWORD=$password psql --host "$hostName" --port "$port" -U "$userName" -d "$databaseName" -f "$toBePatched""$filename"
 		mv "$toBePatched""$filename" "$archiveFolder""$filename"
 		echo 'Created patches tables'
 	fi
+	
 
-	#If patch table available, run patches and patch <> inital
-	if [[ $patchTable = 1 && $patchNumber != "initial" ]]; then
-	local resultValue=$(psql --host "$hostName" --port "$port" -U "$userName" -d "$databaseName" -t -c "$checkCurrPatchNumber""$patchNumber")
-	echo "$resultValue"	 		
-		 if [ "$patchNumber" <= "$resultValue" ]; then
-			echo "ERROR: verify your patch number. Patch number is lower then current!" 		
-		 fi
-		 if [ $? -ne 0 ]; then
-		    echo FAIL
-		    exit
-		  fi	 
+	#Check Version Number
+	if [[ $patchTable != 0 && $patchNumber != 'initial' ]]; then	
+	resultValue=$(PGPASSWORD=$password psql --host "$hostName" --port "$port" -U "$userName" -d "$databaseName" -t -c "$checkCurrPatchNumber""$patchNumber")
+
+		if [[ $(($patchNumber+0)) -lt $resultValue || $(($patchNumber+0)) -eq $resultValue ]]; then
+			echo "ERROR: verify your patch number. Patch number is lower or equal than the latest!" 	
+			exit
+		else if
+			[[ $(($patchNumber+0)) -gt $resultValue+2 ]]; then
+			echo "ERROR: verify your patch number. Patch number is greater than it is supose to be!" 	
+			exit
+		     fi	
+		fi 
 	fi
+	echo "$(tput setaf 2)"'GetPatchVersion done - OK'"$(tput sgr0)"
 
 }
 
@@ -64,15 +62,17 @@ function runPatches() {
 	for file in "$toBePatched"*; do
   	 filename=${file##*/}  
 	 patchNumber="$(echo $filename|cut -d'V' -f 2)"
-         query="$(psql --host localhost --port 5433 -U docker -d MarketplaceCore -f "$toBePatched""$filename")"	 
-	 echo 'QUERY: '$query
+         query=$(PGPASSWORD=$password psql --host "$hostName" --port "$port" -U "$userName" -d "$databaseName" -f "$toBePatched""$filename")
+
 	#Error Handling
  	if [ -z "$query" ]; then
 	    echo "$(tput bold)""$(tput setaf 1)"' FAIL'"$(tput setaf 3)" 'to run patch patch file: ' "$filename" '. Verify your patch file or RESTORE your database.'"$(tput sgr0)" 
 	    exit	
-	    else updatePatchTable	 
+	    else updatePatchTable 
 	 fi
-  done
+	done
+	
+	echo "$(tput setaf 2)"'RunPatches done - OK'"$(tput sgr0)"
 
 }
 
@@ -86,7 +86,9 @@ function moveFilesToArchive() {
 	    echo FAIL to move files to Archive
 	    exit
 	  fi	
-  done
+	 done
+	
+ 	echo "$(tput setaf 2)"'MoveFilesToArchive done - OK'"$(tput sgr0)"
 
 }
 
@@ -95,11 +97,11 @@ function updatePatchTable() {
 	date=`date +%Y-%m-%d`
 	time=`date +%H:%M:%S`
 	datetime="'${date} ${time}'"
-	echo $datetime
-	patchid=1
-	query="${updatePatchTable}(${patchid},'${filename}',${patchNumber},${datetime})"
-	echo $query
-	psql --host "$hostName" --port "$port" -U "$userName" -d "$databaseName" -t -c "$query"
+	query="${updatePatchTable}('${filename}',${patchNumber},${datetime})"
+
+	PGPASSWORD=$password psql --host "$hostName" --port "$port" -U "$userName" -d "$databaseName" -t -c "$query"
+
+	echo "$(tput setaf 2)"'UpdatePatchTable done - OK'"$(tput sgr0)"	
 }
 
 #PROGRAM FLOW
@@ -118,13 +120,25 @@ echo $backupDone
 
 # 2 - Once Backup is there, check the Patch files and dependecies
 echo $checkDep
+	#Get the database password
+	echo -n $"$(tput setaf 3)""Enter Database Password:""$(tput sgr0)"  $'\n'
+	read -s password 
+	PGAPASSWORD=$password;
+	
+	 #Proof if password isn't null
+ 	 if [ -z $password ]; then
+		echo 'Password is null'
+		exit
+	 fi
+
+	#Iterate over files
 	for file in "$toBePatched"*; do
 	  filename=${file##*/}  
 	  echo "$(tput setaf 3)"$filename"$(tput sgr0)"
 	  patchNumber="$(echo $filename|cut -d'V' -f 2)"
 
 	  #Check the patchnumber against the current installed patch
-	  getPatchVersion $patchNumber  
+	  getPatchVersion $patchNumber	  
 	done
 
 
@@ -132,17 +146,17 @@ echo $checkDep
 echo $runPatches
 	read -p "(y/n):" result
 		if [ "$result" == "y" ];then
+			#Run the patches
 			runPatches
-			#Update patch table
-			updatePatchTable
 			#Move the patch files to the Archive
-			moveFilesToArchive
+			moveFilesToArchive				
 		elif [ "$result" == "n" ];then	
 			exit
 		else
 			echo $invalidInput
 			exit
 	fi
+	echo "$(tput setaf 3)"'All done - OK'"$(tput sgr0)"	
 exit 1
 
 

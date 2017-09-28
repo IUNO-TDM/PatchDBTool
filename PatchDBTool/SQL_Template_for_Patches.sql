@@ -12,16 +12,18 @@
 -- 	2) Which Git Issue Number is this patch solving?
 -- 	3) Which changes are going to be done?
 -- PATCH FILE NAME - THIS IS MANDATORY
--- iuno_<databasename>_V<patchnumber>V_<execution date>.sql
+-- iuno_<databasename>_V<patchnumber>V_<creation date>.sql
 -- PatchNumber Format: 00000 whereas each new Patch increase the patchnumber by 1
 -- Example: iuno_marketplacecore_V00001V_20170913.sql
 --#######################################################################################################
+-- PUT YOUR STATEMENTS HERE:
+-- 	1) Why is this Patch necessary? 
+-- 	2) Which Git Issue Number is this patch solving? 
+-- 	3) Which changes are going to be done? 
 --: Run Patches
 DO
 $$
 	BEGIN		
-
-	 <PUT YOUR CODE HERE>
-
+		PUT YOUR CODE HERE
 	END;
 $$;
