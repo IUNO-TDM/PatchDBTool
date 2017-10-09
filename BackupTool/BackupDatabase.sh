@@ -1,8 +1,7 @@
 #!/bin/bash
-#echo arguments to the shell 
 
-#CONFIGURATION
-. ./BackupDatabase.config
+#Variables
+Path="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/backups/"
 
 echo "$(tput bold)""$(tput setaf 1)"'Get Docker containerid: RUNNING docker ps -a'"$(tput sgr0)"
 #GET ALL CONTAINERID
@@ -12,6 +11,10 @@ read containerid
 
 echo -n "Enter Database name: "
 read databaseName
+
+echo -n "Enter username: "
+read userName
+
 
 echo "$(tput setaf 2)"'Create Backup for Docker ContainerID: ' "$(tput setaf 3)" $containerid "$(tput setaf 2)" ' and Database: ' "$(tput setaf 3)"$databaseName "$(tput sgr0)"
 
