@@ -7,13 +7,13 @@
 
 This sections describes how to set up and use the PatchDBTool. The PatchDBTool contains 3 bash scripts to deploy postgres patches to an existing database. The tools
 are:
-- BackupTool
-- PatchDB
-- Restore
+- backup
+- patch
+- restore
 
 **Some important informations**
-- Running the BackupTool will create a backup for the given database and store it on the folder **/BackupTool/Backups**
-- Running the PatchDB will runs the patches located on the **/PatchDBTool/PatchDB/Patches**. Once the patch file was successful installed, the file is going to be moved to **/PatchDBTool/PatchDB/Archive**. In error case the file won't be moved.
+- Running the backup will create a backup for the given database and store it on the folder **/backups**
+- Running the PatchDB will runs the patches located on the **/patches**. Once the patch file was successful installed, the file is going to be moved to **/archive**. In error case the file won't be moved.
 
 **VERY IMPORTANT: Patch files MUST follow the naming convention below:**
 - Name convention for Patch Files: **projectname_databasename_VpatchnumberV_executiondate.sql**
@@ -21,46 +21,38 @@ are:
 - The patchnumber MUST be placed between an initial and a final V (this is the delimiter for the script file)
 - The patchnumber should be increased by 1 for the next patch.
 - A Change-Log needs to be created for each database
-    - MarketplaceCore [Change-Log](https://github.com/IUNO-TDM/MarketplaceCore/tree/master/Database-patches)
-    - OAuthDB [Change-Log](https://github.com/IUNO-TDM)
+    - MarketplaceCore [Change-Log](https://github.com/IUNO-TDM/MarketplaceCore/tree/master/database/patches)
+    - OAuthDB [Change-Log (Coming soon...)](https://github.com/IUNO-TDM)
 - The initial patch file is a special case and has a different naming convention.
 - Create Patch files using the [SQL_Template_for_Patches.sql](https://github.com/IUNO-TDM/PatchDBTool/blob/master/PatchDBTool/SQL_Template_for_Patches.sql) file
 
 * * * * * * * * *
-**SET UP**
 
-1. Step - Copy the .tar file to your target system
-2. Step - unzip the file to your target system
-3. Change the Configuration parameters in the files
-    - BackupTool.config
-    - PatchDB.config
-    - RestoreDB.config
-* * * * * * * * *
 **Running the PatchDBTool**
-1. STEP - RUN Backup Script (BackupDatabase.sh)
+1. STEP - RUN Backup Script (backup.sh)
 - Open Bash Terminal
-- run command "chmod +x <pathToBackupScript> (e.g. /BackupTool/BackupDatabase.sh)"
-- run command "<pathToBackupScript> (e.g. ./BackupTool/BackupDatabase.sh)"
-- enter docker containerid and press ENTER
-- enter Databasename and press ENTER
+- run command "chmod +x backup.sh"
+- run command "./backup.sh"
+- ** follow the instructions **
 * * * * * * * * *
 2. STEP - Check Database Backup
 - Check if the backup exists and file size is plausible
 * * * * * * * * *
 3. STEP - Copy the patch files
-- Copy the patch files from local system to your target system **../PatchDBTool/PathDB/ToBePatched** folder
+- Copy the patch files from local system to your target system **/patches** folder
 * * * * * * * * *
-4. STEP - RUN Patch Script (PatchDB.sh)
+4. STEP - RUN Patch Script (patch.sh)
 - Open Bash Terminal
-- run command "chmod +x <pathToPatchDBTool> (e.g. /PatchDB/PatchDB.sh)"
-- run command ./PatchDB.sh
-- Proof if all Patches were installed and moved to the **/PatchDB/Archive** folder
+- run command "chmod +x patch.sh"
+- run command ./patch.sh
+- ** follow the instructions **
+- Check if all Patches were installed and moved to the **/archive** folder
 * * * * * * * * *
 **RECOVER the Database - If any problem occurs, you may restore the old database**
-1. STEP - RUN the RESTORE Script (RestoreDB.sh)
+1. STEP - RUN the RESTORE Script (restore.sh)
 - Open Bash Terminal
-- copy docker containerid for the db container (e.g. tdmdocker_core-db)
-- run command "chmod +x /RestoreDB/RestoreDB.sh"
-- set containerid as parameter as well as the databasename and the Backup path and press ENTER
-- Proof if the database was restored correctly
+- run command "chmod +x restore.sh"
+- run command ./restore.sh
+- ** follow the instructions **
+- Check if the database was restored correctly
 
