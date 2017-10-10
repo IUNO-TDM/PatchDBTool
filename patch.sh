@@ -1,7 +1,8 @@
 #!/bin/bash
 
-#Get Config file
-. ./PatchDB.config
+#PATCH_FOLDERS
+toBePatched="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/patches/"
+archiveFolder="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/archive/"
 
 #MESSAGES 
 backupOk='Great!'
@@ -18,8 +19,8 @@ checkCurrPatchNumber="SELECT max(patchnumber) as patchnumber from patches where 
 #FUNCTIONS
 function getPatchVersion() { 
 	 echo "Check Patch Version"
-	 #Check if Patch Table exists. If don't Patch initial needs to be used	 	 
-	 patchTable=$(PGPASSWORD=$password psql --host "$hostName" --port "$port" -U "$userName" -d "$databaseName" -t -c "$checkPatchTable")
+	 #Check if Patch Table exists. If don't Patch initial needs to be used
+	 patchTable=$(docker exec -i -e PGPASSWORD=$password "$containerid" psql -U "$userName" -d "$databaseName" -t -c "$checkPatchTable")
 	 if [ $? != 0 ]; then
 		exit
 	 fi
@@ -30,10 +31,15 @@ function getPatchVersion() {
 		exit
 	fi
 
+    #Copy all patches in container
+
+    docker exec -i "$containerid" rm -rf patches
+	docker cp "$toBePatched" "$containerid":/patches/
+
 	#Does the patch table exists? IF not just created - require initial patch	
 	if [[ $patchTable != 0  && $patchNumber = "initial" ]]; then
 		echo 'Run initial patch'
-		PGPASSWORD=$password psql --host "$hostName" --port "$port" -U "$userName" -d "$databaseName" -f "$toBePatched""$filename"
+		docker exec -i -e PGPASSWORD=$password "$containerid" psql -U "$userName" -d "$databaseName" -f "/patches/""$filename"
 		mv "$toBePatched""$filename" "$archiveFolder""$filename"
 		echo 'Created patches tables'
 	fi
@@ -41,7 +47,7 @@ function getPatchVersion() {
 
 	#Check Version Number
 	if [[ $patchTable != 0 && $patchNumber != 'initial' ]]; then	
-	resultValue=$(PGPASSWORD=$password psql --host "$hostName" --port "$port" -U "$userName" -d "$databaseName" -t -c "$checkCurrPatchNumber""$patchNumber")
+	resultValue=$(docker exec -i -e PGPASSWORD=$password "$containerid" psql -U "$userName" -d "$databaseName" -t -c "$checkCurrPatchNumber""$patchNumber")
 
 		if [[ $(($patchNumber+0)) -lt $resultValue || $(($patchNumber+0)) -eq $resultValue ]]; then
 			echo "ERROR: verify your patch number. Patch number is lower or equal than the latest!" 	
@@ -56,7 +62,7 @@ function runPatches() {
 	for file in "$toBePatched"*; do
   	 filename=${file##*/}  
 	 patchNumber="$(echo $filename|cut -d'V' -f 2)"
-         query=$(PGPASSWORD=$password psql --host "$hostName" --port "$port" -U "$userName" -d "$databaseName" -f "$toBePatched""$filename")
+         query=$(docker exec -i -e PGPASSWORD=$password "$containerid" psql -U "$userName" -d "$databaseName" -f "/patches/""$filename")
 
 	#Error Handling
  	if [ -z "$query" ]; then
@@ -99,7 +105,22 @@ echo $backupDone
 			exit
 	fi
 
-# 2 - Once Backup is there, check the Patch files and dependecies
+# 2 - Get config parameters
+
+echo "$(tput bold)""$(tput setaf 1)"'Get Docker containerid: RUNNING docker ps -a'"$(tput sgr0)"
+#GET ALL CONTAINERID
+docker ps -a
+echo -n "$(tput bold)""$(tput setaf 3)""Done! Copy and Enter ContainerID: "
+read containerid
+
+echo -n "Enter Database name: "
+read databaseName
+
+echo -n "Enter username: "
+read userName
+
+
+# 3 - Once Backup is there, check the Patch files and dependecies
 echo $checkDep
 	#Get the database password
 	echo -n $"$(tput setaf 3)""Enter Database Password:""$(tput sgr0)"  $'\n'

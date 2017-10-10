@@ -1,10 +1,5 @@
 #!/bin/bash
-#echo arguments to the shell
 #TODO: Error handling!
-#TODO: Config for PATH and others
-
-#CONFIGURATION
-. ./RestoreDB.config
 
 
 echo "$(tput bold)""$(tput setaf 1)"'Get Docker containerid: RUNNING docker ps -a'"$(tput sgr0)"
@@ -15,6 +10,13 @@ read containerid
 
 echo -n "Enter Database name: "
 read databaseName
+
+echo -n "Enter username: "
+read userName
+
+echo -n "Enter absolute path to backup file that should be restored: "
+read FILENAME
+
 
 echo "$(tput setaf 2)"'Restore Database for Docker ContainerID: ' "$(tput setaf 3)" $containerid "$(tput setaf 2)" ' and Database: ' "$(tput setaf 3)"$databaseName "$(tput sgr0)"
 
@@ -37,23 +39,23 @@ read -p "(y/n):" result
 		fi
 #Cut all connections
 echo Close all connections to database
-PGPASSWORD=$password psql --host "$hostName" --port "$port" -U "$userName" -d "$databaseName" -t -c "SELECT pg_terminate_backend(pid) FROM pg_stat_activity WHERE datname = "\'$databaseName\'""
+docker exec -i -e PGPASSWORD="$password" "$containerid" psql -U "$userName" -d "$databaseName" -t -c "SELECT pg_terminate_backend(pid) FROM pg_stat_activity WHERE datname = "\'$databaseName\'""
  
 #Drop DB
 echo Drop old Database
-docker exec -i -e PGPASSWORD="$password" "$containerid" dropdb --host "$hostName" -p "$port" -U "$userName" "$databaseName"
+docker exec -i -e PGPASSWORD="$password" "$containerid" dropdb -U "$userName" "$databaseName"
 if [ $? != 0 ]; then
 	exit
 fi
 #Create DB
 echo Create new Database
-docker exec -i -e PGPASSWORD="$password" "$containerid" createdb --host "$hostName" -p "$port" -U "$userName" "$databaseName"
+docker exec -i -e PGPASSWORD="$password" "$containerid" createdb -U "$userName" "$databaseName"
 if [ $? != 0 ]; then
 	exit
 fi
 #Restore database
 echo Restore Database
-docker exec -i -e PGPASSWORD="$password" "$containerid" pg_restore --host "$hostName" -p "$port" -U "$userName" -d "$databaseName" < "$FILENAME"
+docker exec -i -e PGPASSWORD="$password" "$containerid" pg_restore -U "$userName" -d "$databaseName" < "$FILENAME"
 if [ $? != 0 ]; then
 	exit
 fi
