@@ -8,17 +8,17 @@ docker ps -a
 echo -n "$(tput bold)""$(tput setaf 3)""Done! Copy and Enter ContainerID: " 
 read containerid
 
+echo -n "Enter absolute path to backup file that should be restored: "
+read FILENAME
+
 echo -n "Enter Database name: "
 read databaseName
 
 echo -n "Enter username: "
 read userName
 
-echo -n "Enter absolute path to backup file that should be restored: "
-read FILENAME
 
-
-echo "$(tput setaf 2)"'Restore Database for Docker ContainerID: ' "$(tput setaf 3)" $containerid "$(tput setaf 2)" ' and Database: ' "$(tput setaf 3)"$databaseName "$(tput sgr0)"
+echo "$(tput setaf 2)"'Restore Database for Docker ContainerID: ' "$(tput setaf 3)" $containerid "$(tput setaf 2)" ' and Database: ' "$(tput setaf 3)"${databaseName} "$(tput sgr0)"
 
 #GET DATE AND TIME FOR FILENAME
 DATE=`date +%Y-%m-%d`
@@ -38,8 +38,10 @@ read -p "(y/n):" result
 			exit
 		fi
 #Cut all connections
-echo Close all connections to database
-docker exec -i -e PGPASSWORD="$password" "$containerid" psql -U "$userName" -d "$databaseName" -t -c "SELECT pg_terminate_backend(pid) FROM pg_stat_activity WHERE datname = "\'$databaseName\'""
+echo Revoke other connections to the database: ${databaseName}
+docker exec -i -e PGPASSWORD="$password" "$containerid" psql -U "$userName" -d "$databaseName" -t -c "REVOKE CONNECT ON DATABASE "\"${databaseName}\"" FROM public;"
+echo Close all connections to database except our own
+docker exec -i -e PGPASSWORD="$password" "$containerid" psql -U "$userName" -d "$databaseName" -t -c "SELECT pid, pg_terminate_backend(pid) FROM pg_stat_activity WHERE datname = "\'${databaseName}\'" AND pid <> pg_backend_pid();"
  
 #Drop DB
 echo Drop old Database
