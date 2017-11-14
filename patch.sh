@@ -49,7 +49,7 @@ function getPatchVersion() {
 	if [[ $patchTable != 0 && $patchNumber != 'initial' ]]; then	
 	resultValue=$(docker exec -i -e PGPASSWORD=$password "$containerid" psql -U "$userName" -d "$databaseName" -t -c "$checkCurrPatchNumber""$patchNumber")
 
-		if [[ $(($patchNumber+0)) -lt $resultValue || $(($patchNumber+0)) -eq $resultValue ]]; then
+		if [[ $((10#$patchNumber)) -lt $resultValue || $((10#$patchNumber)) -eq $resultValue ]]; then
 			echo "ERROR: verify your patch number. Patch number is lower or equal than the latest!" 	
 			exit 
 		fi 
