@@ -31,10 +31,15 @@ $$
 		PatchName varchar		 	 := PUT YOUR PATCH NAME HERE;
 		PatchNumber int 		 	 := PUT YOUR PATCH NUMBER HERE;
 		PatchDescription varchar 	 := PUT YOUR PATCH DESCRIPTION HERE;
+        CurrentPatch int 			 := (select max(p.patchnumber) from patches p);
 
-	BEGIN	
+	BEGIN
 		--INSERT START VALUES TO THE PATCH TABLE
-		INSERT INTO PATCHES (patchname, patchnumber, patchdescription, startat) VALUES (PatchName, PatchNumber, PatchDescription, now());		
+		IF (PatchNumber <= CurrentPatch) THEN
+			RAISE EXCEPTION '%', 'Wrong patch number. Please verify your patches!';
+		ELSE
+			INSERT INTO PATCHES (patchname, patchnumber, patchdescription, startat) VALUES (PatchName, PatchNumber, PatchDescription, now());
+		END IF;
 	END;
 $$;
 ------------------------------------------------------------------------------------------------
@@ -44,7 +49,7 @@ $$;
 DO
 $$
 		DECLARE
-			vPatchNumber int := (select max(patchnumber) from patches);
+			vPatchNumber int := PUT YOUR PATCH NUMBER HERE;
 		BEGIN
 	----------------------------------------------------------------------------------------------------------------------------------------
 			
